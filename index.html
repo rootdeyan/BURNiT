@@ -205,9 +205,7 @@
   #bulkText::placeholder{ color: var(--muted-dim); }
 
   /* ---------- tabs ---------- */
-  .tabs-nav{ position: relative; display:flex; gap: 6px; overflow-x: auto; overflow-y: visible; padding: 2px 2px 10px; margin-bottom: 4px; scrollbar-width: thin; }
-  .tabs-nav::-webkit-scrollbar{ height: 5px; }
-  .tabs-nav::-webkit-scrollbar-thumb{ background: var(--line-strong); border-radius: 4px; }
+  .tabs-nav{ position: relative; display:flex; flex-wrap: wrap; gap: 6px; padding: 2px 2px 10px; margin-bottom: 4px; }
 
   .tab-btn{
     flex: 0 0 auto; background: none; border: none; color: var(--muted); font-family: var(--font);
