@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BurnIT — Склад за пелети</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #0B0D12;
+    --bg-soft: rgba(255,255,255,0.035);
+    --card: rgba(255,255,255,0.045);
+    --card-border: rgba(255,255,255,0.09);
+    --line: rgba(255,255,255,0.07);
+    --line-strong: rgba(255,255,255,0.16);
+    --ember: #E8630A;
+    --ember-light: #F4A15C;
+    --ember-dim: rgba(232,99,10,0.16);
+    --text: #F5F6F8;
+    --muted: #9AA1AE;
+    --muted-dim: rgba(245,246,248,0.32);
+    --good: #6FCF97;
+    --good-dim: rgba(111,207,151,0.14);
+    --bad: #EB5B5B;
+    --bad-dim: rgba(235,91,91,0.14);
+    --radius: 18px;
+    --blur: 22px;
+    --font: "Roboto", system-ui, -apple-system, sans-serif;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 560px at 12% -12%, rgba(232,99,10,0.16), transparent 60%),
+      radial-gradient(900px 520px at 108% 8%, rgba(244,161,92,0.09), transparent 55%),
+      radial-gradient(800px 520px at 50% 115%, rgba(111,207,151,0.06), transparent 60%),
+      linear-gradient(180deg, #0D0F15, #08090D 55%, #0B0D12);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: var(--font);
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  ::selection{ background: var(--ember-dim); color: var(--text); }
+  :focus-visible{ outline: 2px solid var(--ember-light); outline-offset: 3px; border-radius: 6px; }
+
+  .wrap{ max-width: 960px; margin: 0 auto; padding: clamp(18px, 5vw, 56px) 16px 90px; }
+
+  /* ---------- glass base ---------- */
+  .glass{
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(var(--blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(160%);
+    box-shadow: 0 10px 34px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* ---------- animations ---------- */
+  @keyframes riseIn{ from{ opacity:0; transform: translateY(14px);} to{ opacity:1; transform:none; } }
+  @keyframes popIn{ from{ opacity:0; transform: scale(.94);} to{ opacity:1; transform:none; } }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes pulseBad{ 0%,100%{ box-shadow: 0 10px 34px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 rgba(235,91,91,0);} 50%{ box-shadow: 0 10px 34px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 22px rgba(235,91,91,0.28);} }
+  .anim-rise{ animation: riseIn .55s cubic-bezier(.22,1,.36,1) both; }
+  .anim-pop{ animation: popIn .4s cubic-bezier(.22,1,.36,1) both; }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior: auto; }
+    *,*::before,*::after{ animation: none !important; transition: none !important; }
+  }
+
+  a{ color: var(--ember-light); }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding-bottom: 36px; border-bottom: 1px solid var(--line); margin-bottom: 36px; }
+  .eyebrow{
+    font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ember-light); display:flex; align-items:center; gap:10px; margin-bottom: 16px;
+  }
+  .eyebrow::before{ content:""; width:22px; height:1px; background: var(--ember-light); }
+  h1{ font-weight: 900; font-size: clamp(30px, 7vw, 48px); line-height: 1.05; margin: 0 0 10px; letter-spacing: -0.01em; }
+  .hero p.sub{ color: var(--muted); max-width: 50ch; font-size: 15px; margin: 0 0 30px; }
+
+  .stat-row{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 720px){ .stat-row{ grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 440px){ .stat-row{ grid-template-columns: 1fr; } }
+
+  .stat{ padding: 16px 18px; position: relative; overflow: hidden; }
+  .stat .label{ font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat .value{ font-size: clamp(22px, 4vw, 28px); font-weight: 900; color: var(--text); }
+  .stat .value span{ font-size: 14px; color: var(--muted); font-weight: 500; }
+
+  .badge{ display:inline-flex; align-items:center; gap:7px; font-size: 13px; font-weight: 700; padding: 4px 11px 4px 9px; border-radius: 999px; }
+  .badge.good{ background: var(--good-dim); color: var(--good); }
+  .badge.bad{ background: var(--bad-dim); color: var(--bad); }
+  .badge .dot{ width:7px; height:7px; border-radius:50%; background: currentColor; }
+
+  /* ---------- reminder banner ---------- */
+  .reminder-banner{
+    display:flex; align-items:center; gap:11px; margin-top:14px; padding: 14px 16px;
+    font-size: 13.5px; font-weight:600; line-height:1.5;
+  }
+  .reminder-banner .ric{ font-size:17px; line-height:1; flex-shrink:0; }
+  .reminder-banner.good{ color: var(--good); border-color: rgba(111,207,151,0.3); background: linear-gradient(rgba(111,207,151,0.10), rgba(111,207,151,0.02)), var(--card); }
+  .reminder-banner.warn{ color: var(--ember-light); border-color: rgba(244,161,92,0.35); background: linear-gradient(rgba(232,99,10,0.14), rgba(232,99,10,0.02)), var(--card); }
+  .reminder-banner.bad{ color: var(--bad); border-color: rgba(235,91,91,0.38); background: linear-gradient(rgba(235,91,91,0.14), rgba(235,91,91,0.02)), var(--card); animation: pulseBad 2.4s ease-in-out infinite; }
+  .reminder-banner.neutral{ color: var(--muted); }
+  .reminder-banner b{ color: inherit; }
+
+  /* ---------- sections ---------- */
+  section{ margin-bottom: 46px; }
+  .section-head{ display:flex; align-items:baseline; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .section-head h2{ font-size: 21px; font-weight: 900; margin:0; }
+  .section-head .hint{ color: var(--muted); font-size: 13px; }
+
+  /* ---------- chart ---------- */
+  .chart-card{ padding: 18px 14px 10px; }
+  .chart-legend{ display:flex; gap: 18px; padding: 0 8px 12px; flex-wrap: wrap; }
+  .chart-legend .li{ display:flex; align-items:center; gap:7px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+  .chart-legend .sw{ width: 10px; height: 10px; border-radius: 3px; }
+  .chart-wrap{ position: relative; height: 240px; }
+  @media (max-width: 560px){ .chart-wrap{ height: 200px; } }
+
+  /* ---------- form card ---------- */
+  .card{ padding: 22px; }
+  .form-grid{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px 18px; }
+  @media (max-width: 560px){ .form-grid{ grid-template-columns: minmax(0,1fr); } }
+  .field{ display:flex; flex-direction:column; gap:7px; min-width: 0; }
+  .field.full{ grid-column: 1 / -1; }
+  .field label{ font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; }
+  .field input[type=date], .field input[type=number], .field input[type=text]{
+    background: rgba(255,255,255,0.035); border: 1px solid var(--line-strong); color: var(--text);
+    font-family: var(--font); font-size: 16px; padding: 12px 12px; border-radius: 10px;
+    width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .field input[type=date]{
+    color-scheme: dark;
+    appearance: none; -webkit-appearance: none;
+  }
+  .field input[type=date]::-webkit-calendar-picker-indicator{
+    filter: invert(70%) sepia(60%) saturate(900%) hue-rotate(-10deg) brightness(1.05);
+    cursor: pointer;
+    padding: 2px;
+  }
+  .field input[type=date]::-webkit-datetime-edit{ padding: 0; }
+  .field input::placeholder{ color: var(--muted-dim); }
+  .field input:focus{ border-color: var(--ember); background: rgba(255,255,255,0.06); }
+  .bags-preview{ font-size: 12.5px; color: var(--ember-light); font-weight: 500; min-height: 16px; }
+
+  .toggle-group{ display:flex; gap:8px; }
+  .toggle-btn{
+    flex:1; padding: 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(255,255,255,0.03);
+    color: var(--muted); font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all .15s ease; min-height: 46px;
+  }
+  .toggle-btn:hover{ border-color: var(--line-strong); background: rgba(255,255,255,0.07); }
+  .toggle-btn[aria-pressed="true"].yes{ background: var(--good-dim); border-color: var(--good); color: var(--good); }
+  .toggle-btn[aria-pressed="true"].no{ background: var(--bad-dim); border-color: var(--bad); color: var(--bad); }
+
+  .submit-row{ display:flex; justify-content:flex-end; margin-top: 18px; }
+  .btn-primary{
+    background: linear-gradient(180deg, var(--ember-light), var(--ember)); color: #1a1108; border: none;
+    font-family: var(--font); font-weight: 700; font-size: 15px; padding: 13px 24px; border-radius: 10px;
+    cursor: pointer; letter-spacing: 0.01em; transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+    min-height: 46px; box-shadow: 0 8px 22px rgba(232,99,10,0.32), inset 0 1px 0 rgba(255,255,255,0.28);
+  }
+  .btn-primary:hover{ filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(232,99,10,0.4), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .btn-primary:active{ transform: translateY(0) scale(.98); }
+
+  .btn-ghost{
+    background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--line-strong);
+    font-family: var(--font); font-weight: 700; font-size: 13.5px; padding: 10px 16px; border-radius: 10px;
+    cursor: pointer; transition: all .15s ease; display:inline-flex; align-items:center; gap:8px; min-height: 42px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .btn-ghost:hover{ border-color: var(--ember); color: var(--ember-light); background: rgba(255,255,255,0.08); }
+
+  /* ---------- data toolbar ---------- */
+  .data-toolbar{ display:flex; gap: 10px; flex-wrap: wrap; }
+  .toolbar-msg{ font-size: 12.5px; color: var(--good); font-weight: 500; margin-top: 10px; min-height: 16px; }
+  .toolbar-msg.err{ color: var(--bad); }
+
+  .bulk-divider{ height: 1px; background: var(--line); margin: 22px 0; }
+  .bulk-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom: 8px; }
+  .bulk-head strong{ font-size: 14.5px; }
+  .bulk-desc{ font-size: 12.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.6; }
+  .bulk-desc code{ background: rgba(255,255,255,0.05); border: 1px solid var(--line-strong); padding: 2px 6px; border-radius: 5px; color: var(--ember-light); font-size: 12px; }
+  #bulkText{
+    width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.035); border: 1px solid var(--line-strong); color: var(--text);
+    font-family: var(--font); font-size: 14.5px; padding: 12px; border-radius: 10px; resize: vertical;
+    transition: border-color .15s ease;
+  }
+  #bulkText:focus{ border-color: var(--ember); }
+  #bulkText::placeholder{ color: var(--muted-dim); }
+
+  /* ---------- tabs ---------- */
+  .tabs-nav{ position: relative; display:flex; gap: 6px; overflow-x: auto; overflow-y: visible; padding: 2px 2px 10px; margin-bottom: 4px; scrollbar-width: thin; }
+  .tabs-nav::-webkit-scrollbar{ height: 5px; }
+  .tabs-nav::-webkit-scrollbar-thumb{ background: var(--line-strong); border-radius: 4px; }
+
+  .tab-btn{
+    flex: 0 0 auto; background: none; border: none; color: var(--muted); font-family: var(--font);
+    font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 10px; cursor: pointer;
+    white-space: nowrap; transition: color .15s ease, background .15s ease; min-height: 42px;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .tab-btn:hover{ color: var(--text); background: rgba(255,255,255,0.05); }
+  .tab-btn.active{ color: var(--ember-light); background: var(--ember-dim); }
+  .tab-btn .chev{ font-size: 9px; opacity: .75; transition: transform .2s ease; }
+  .tab-year-wrap{ position: relative; }
+  .tab-year-wrap.open .chev, .tab-year-wrap:hover .chev{ transform: rotate(180deg); }
+
+  .year-dropdown{
+    position: absolute; top: 100%; left: 0; margin-top: 8px; min-width: 172px; padding: 6px;
+    display: none; flex-direction: column; gap: 2px; z-index: 30;
+    background: rgba(20,22,29,0.72); border: 1px solid var(--card-border); border-radius: 14px;
+    backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+    box-shadow: 0 20px 46px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .tab-year-wrap.open .year-dropdown, .tab-year-wrap:hover .year-dropdown{ display: flex; }
+  .dd-month{
+    background: none; border: none; color: var(--muted); font-family: var(--font); font-size: 13.5px; font-weight: 600;
+    padding: 9px 12px; border-radius: 9px; text-align: left; cursor: pointer; transition: all .15s ease;
+  }
+  .dd-month:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+  .dd-month.active{ background: var(--ember-dim); color: var(--ember-light); }
+
+  .tabs-underline{ height: 2px; background: var(--line); border-radius: 2px; margin-bottom: 22px; position: relative; }
+  .tabs-underline .indicator{ position:absolute; top:0; left:0; height: 2px; background: var(--ember); border-radius: 2px; transition: transform .3s cubic-bezier(.65,0,.35,1), width .3s cubic-bezier(.65,0,.35,1); }
+
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .month-summary{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .month-summary .totals{ font-size: 13.5px; color: var(--ember-light); font-weight: 700; }
+
+  .entry{
+    display:grid; grid-template-columns: 92px 1fr auto auto; align-items:center; gap: 12px;
+    padding: 13px 6px; border-bottom: 1px dashed var(--line);
+  }
+  .entry:last-child{ border-bottom: none; }
+  @media (max-width: 560px){
+    .entry{ grid-template-columns: 1fr auto; row-gap: 6px; }
+    .entry .amount{ order: 3; grid-column: 1/-1; }
+  }
+  .entry .date{ font-size: 13.5px; font-weight: 500; color: var(--muted); }
+  .entry .amount{ font-size: 14.5px; }
+  .entry .amount b{ color: var(--text); font-weight: 700; }
+  .entry .notes-inline{ font-size: 13px; color: var(--muted); font-style: italic; font-weight: 400; }
+  .entry .del{ background:none; border:none; color: var(--muted-dim); cursor:pointer; font-size:18px; padding:6px 8px; line-height:1; border-radius:8px; min-width:36px; min-height:36px; }
+  .entry .del:hover{ color: var(--bad); background: var(--bad-dim); }
+
+  .empty{ text-align:center; padding: 44px 18px; border: 1px dashed var(--line-strong); border-radius: var(--radius); color: var(--muted); font-size: 14.5px; }
+
+  .foot-note{ text-align:center; color: var(--muted-dim); font-size: 12px; margin-top: 46px; }
+
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero anim-rise">
+    <div class="eyebrow">BurnIT · Дневник за отопление</div>
+    <h1>Склад за пелети</h1>
+    <p class="sub">Всяко зареждане, всяко почистване на горелката — на едно място. Чувалите тежат фиксирано по 15&nbsp;кг.</p>
+
+    <div class="stat-row">
+      <div class="stat glass"><div class="label">Общо заредено</div><div class="value" id="statTotalKg">0 <span>кг</span></div></div>
+      <div class="stat glass"><div class="label">Общо чували</div><div class="value" id="statTotalBags">0 <span>бр.</span></div></div>
+      <div class="stat glass"><div class="label">Последно почистване</div><div class="value" id="statLastClean" style="font-size:16px; padding-top:5px;">—</div></div>
+    </div>
+
+    <div class="reminder-banner glass" id="reminderBanner"></div>
+  </header>
+
+  <section aria-labelledby="chartHeading" class="anim-rise" style="animation-delay:.06s">
+    <div class="section-head">
+      <h2 id="chartHeading">Активност във времето</h2>
+      <span class="hint">зареждания и почиствания по месец</span>
+    </div>
+    <div class="chart-card glass">
+      <div class="chart-legend">
+        <span class="li"><span class="sw" style="background:var(--ember);"></span>Зареждания</span>
+        <span class="li"><span class="sw" style="background:var(--good);"></span>Почиствания</span>
+      </div>
+      <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="formHeading" class="anim-rise" style="animation-delay:.1s">
+    <div class="section-head">
+      <h2 id="formHeading">Ново зареждане</h2>
+      <span class="hint">попълни и добави</span>
+    </div>
+
+    <form class="card glass" id="entryForm">
+      <div class="form-grid">
+        <div class="field">
+          <label for="fDate">Дата на зареждане</label>
+          <input type="date" id="fDate" required>
+        </div>
+        <div class="field">
+          <label for="fBags">Брой чували <span style="text-transform:none; opacity:.7;">(по 15 кг)</span></label>
+          <input type="number" id="fBags" min="1" step="1" placeholder="напр. 8" required>
+          <div class="bags-preview" id="bagsPreview"></div>
+        </div>
+        <div class="field full">
+          <label id="cleanLabel">Горелката почистена ли е</label>
+          <div class="toggle-group" role="group" aria-labelledby="cleanLabel">
+            <button type="button" class="toggle-btn yes" id="btnYes" aria-pressed="false">Да</button>
+            <button type="button" class="toggle-btn no" id="btnNo" aria-pressed="false">Не</button>
+          </div>
+        </div>
+        <div class="field full">
+          <label for="fNotes">Бележки <span style="text-transform:none; opacity:.7;">(по избор)</span></label>
+          <input type="text" id="fNotes" placeholder="напр. доставчик, цена...">
+        </div>
+      </div>
+      <div class="submit-row"><button type="submit" class="btn-primary">Добави запис →</button></div>
+    </form>
+  </section>
+
+  <section aria-labelledby="dataHeading" class="anim-rise" style="animation-delay:.14s">
+    <div class="section-head">
+      <h2 id="dataHeading">Данни и синхронизация</h2>
+      <span class="hint">между телефон и компютър</span>
+    </div>
+    <div class="card glass">
+      <div class="data-toolbar">
+        <button type="button" class="btn-ghost" id="btnExport">⭳ Изтегли .txt резервно копие</button>
+        <button type="button" class="btn-ghost" id="btnImportTrigger">⭱ Качи .txt файл</button>
+        <input type="file" id="fileImport" accept=".txt" class="sr-only">
+      </div>
+      <div class="toolbar-msg" id="toolbarMsg"></div>
+
+      <div class="bulk-divider"></div>
+
+      <div class="bulk-add">
+        <div class="bulk-head">
+          <strong>Добави стари записи наведнъж</strong>
+          <span class="hint">за месеци и години назад, които не си въвеждал(а) досега</span>
+        </div>
+        <p class="bulk-desc">Един ред за всяко зареждане, във формат:<br>
+          <code>дд.мм.гггг, брой чували, да/не, бележка</code> — бележката е незадължителна. За запис само с почистване (без зареждане) въведи <code>0</code> за брой чували.</p>
+        <textarea id="bulkText" rows="5" placeholder="напр.&#10;15.01.2025, 6, да, зимен запас&#10;03.11.2024, 8, не&#10;20.09.2024, 5, да&#10;10.12.2024, 0, да, само почистване"></textarea>
+        <div class="submit-row">
+          <button type="button" class="btn-primary" id="btnBulkAdd">Добави записите</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="logHeading" class="anim-rise" style="animation-delay:.18s">
+    <div class="section-head">
+      <h2 id="logHeading">История по месеци</h2>
+      <span class="hint" id="logHint"></span>
+    </div>
+    <div class="tabs-nav" id="tabsNav" role="tablist"></div>
+    <div class="tabs-underline"><div class="indicator" id="tabIndicator"></div></div>
+    <div id="tabPanels" class="glass" style="padding:18px 20px;"></div>
+  </section>
+
+  <p class="foot-note">записите се пазят автоматично в тази страница · направи резервно копие редовно</p>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'burnit-pellet-entries-v1';
+  const BAG_KG = 15;
+  const monthNames = ['януари','февруари','март','април','май','юни','юли','август','септември','октомври','ноември','декември'];
+  const monthShort = ['яну','фев','мар','апр','май','юни','юли','авг','сеп','окт','ное','дек'];
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let entries = [];
+  let cleanedState = null;
+  let activeTabKey = null;
+  let chartInstance = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function fmt(n){ return new Intl.NumberFormat('bg-BG').format(n); }
+  function uid(){ return 'e_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function monthKeyOf(dateIso){ return dateIso.slice(0,7); }
+  function currentMonthKey(){ const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1); }
+  function totalKg(e){ return (Number(e.bags)||0) * BAG_KG; }
+  function formatDateShort(iso){ const [y,m,d] = iso.split('-'); return `${d}.${m}.${y}`; }
+  function escapeHtml(str){ const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+  function monthLabel(key){
+    const [y,m] = key.split('-');
+    const name = monthNames[Number(m)-1];
+    return name.charAt(0).toUpperCase() + name.slice(1) + ' ' + y;
+  }
+
+  /* ---------------- persistence (localStorage) ---------------- */
+  const STORAGE_SUPPORTED = (function(){
+    try{
+      const t = '__burnit_test__';
+      localStorage.setItem(t, '1');
+      localStorage.removeItem(t);
+      return true;
+    }catch(e){ return false; }
+  })();
+
+  function loadEntries(){
+    if(!STORAGE_SUPPORTED){
+      entries = [];
+      activeTabKey = currentMonthKey();
+      renderAll();
+      showMsg('Браузърът блокира локалното съхранение (напр. частен/incognito режим) — записите няма да се запазят между презарежданията.', true);
+      return;
+    }
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      entries = Array.isArray(parsed) ? parsed : [];
+    }catch(e){
+      console.error('BurnIT: повредени данни в localStorage', e);
+      entries = [];
+      showMsg('Съхранените данни не можаха да се прочетат правилно. Провери за резервно копие.', true);
+    }
+    activeTabKey = currentMonthKey();
+    renderAll();
+  }
+
+  function saveEntries(){
+    if(!STORAGE_SUPPORTED) return false;
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      return true;
+    }catch(e){
+      console.error('BurnIT: неуспешен запис в localStorage', e);
+      showMsg('Неуспешен запис — паметта на браузъра може да е пълна. Изтегли резервно копие веднага, за да не загубиш данни.', true);
+      return false;
+    }
+  }
+
+  /* ---------------- count-up animation ---------------- */
+  function animateNumber(el, target, suffix){
+    if(reduceMotion){ el.innerHTML = fmt(target) + (suffix ? ` <span>${suffix}</span>` : ''); return; }
+    const start = 0, dur = 650, t0 = performance.now();
+    function step(t){
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = Math.round(start + (target - start) * eased);
+      el.innerHTML = fmt(val) + (suffix ? ` <span>${suffix}</span>` : '');
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---------------- stats ---------------- */
+  function renderStats(){
+    const allKg = entries.reduce((s,e)=> s + totalKg(e), 0);
+    const allBags = entries.reduce((s,e)=> s + (Number(e.bags)||0), 0);
+    animateNumber($('statTotalKg'), allKg, 'кг');
+    animateNumber($('statTotalBags'), allBags, 'бр.');
+
+    const lastClean = [...entries].sort((a,b)=> b.date.localeCompare(a.date)).find(e => e.cleaned !== null && e.cleaned !== undefined);
+    const statEl = $('statLastClean');
+    if(!lastClean){ statEl.innerHTML = '—'; }
+    else{
+      const cls = lastClean.cleaned ? 'good' : 'bad';
+      const txt = lastClean.cleaned ? 'Да' : 'Не';
+      statEl.innerHTML = `<span class="badge ${cls}"><span class="dot"></span>${txt} · ${formatDateShort(lastClean.date)}</span>`;
+    }
+  }
+
+  /* ---------------- cleaning reminder ---------------- */
+  function seasonIntervalDays(m){
+    if(m === 12 || m === 1 || m === 2) return 7;   // зима — всяка седмица
+    if(m === 6 || m === 7 || m === 8) return 15;    // лято — 2 пъти месечно
+    return 15;                                       // пролет/есен — по подразбиране 2 пъти месечно
+  }
+  function seasonLabelFor(m){
+    if(m === 12 || m === 1 || m === 2) return 'зимен режим · на всеки 7 дни';
+    if(m === 6 || m === 7 || m === 8) return 'летен режим · 2 пъти месечно';
+    return 'междинен сезон · 2 пъти месечно';
+  }
+  function isoOf(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+
+  function computeReminder(){
+    const cleaned = entries.filter(e => e.cleaned === true).sort((a,b)=> b.date.localeCompare(a.date));
+    const last = cleaned[0];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const interval = seasonIntervalDays(today.getMonth()+1);
+    const seasonLabel = seasonLabelFor(today.getMonth()+1);
+    if(!last) return { status:'unknown', seasonLabel };
+
+    const lastDate = new Date(last.date + 'T00:00:00');
+    const dueDate = new Date(lastDate);
+    dueDate.setDate(dueDate.getDate() + interval);
+    const diffDays = Math.round((dueDate - today) / 86400000);
+    return {
+      status: diffDays < 0 ? 'overdue' : (diffDays === 0 ? 'today' : 'ok'),
+      dueDate, lastDate, diffDays, seasonLabel
+    };
+  }
+
+  function renderReminder(){
+    const el = $('reminderBanner');
+    const r = computeReminder();
+
+    if(r.status === 'unknown'){
+      el.className = 'reminder-banner glass neutral';
+      el.innerHTML = `<span class="ric">🕐</span><span>Все още няма отбелязано почистване — добави запис с „почистена: да“, за да тръгнат напомнянията (${r.seasonLabel}).</span>`;
+      return;
+    }
+    const dueStr = formatDateShort(isoOf(r.dueDate));
+    if(r.status === 'overdue'){
+      const days = Math.abs(r.diffDays);
+      el.className = 'reminder-banner glass bad';
+      el.innerHTML = `<span class="ric">⚠</span><span><b>Просрочено почистване</b> — трябваше да е направено на ${dueStr} (${days} ${days===1?'ден':'дни'} закъснение) · последно на ${formatDateShort(isoOf(r.lastDate))} · ${r.seasonLabel}</span>`;
+    } else if(r.status === 'today'){
+      el.className = 'reminder-banner glass warn';
+      el.innerHTML = `<span class="ric">●</span><span><b>Днес</b> е крайният срок за следващото почистване · ${r.seasonLabel}</span>`;
+    } else {
+      el.className = 'reminder-banner glass good';
+      el.innerHTML = `<span class="ric">✓</span><span>Следващо почистване до <b>${dueStr}</b> (остават ${r.diffDays} ${r.diffDays===1?'ден':'дни'}) · ${r.seasonLabel}</span>`;
+    }
+  }
+
+  /* ---------------- chart ---------------- */
+  function renderChart(){
+    const keys = entries.map(e => monthKeyOf(e.date));
+    keys.push(currentMonthKey());
+    let minKey = keys.sort()[0];
+    let maxKey = keys.sort()[keys.length-1];
+
+    const [minY, minM] = minKey.split('-').map(Number);
+    const [maxY, maxM] = maxKey.split('-').map(Number);
+
+    const months = [];
+    let y = minY, m = minM;
+    while(y < maxY || (y === maxY && m <= maxM)){
+      months.push(y + '-' + pad(m));
+      m++; if(m > 12){ m = 1; y++; }
+    }
+
+    const labels = months.map(k => { const [yy,mm] = k.split('-'); return monthShort[Number(mm)-1] + " '" + yy.slice(2); });
+    const loadData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k).length);
+    const cleanData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k && e.cleaned === true).length);
+
+    const ctx = $('activityChart').getContext('2d');
+    if(chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Зареждания', data: loadData, borderColor: '#E8630A', backgroundColor: 'rgba(232,99,10,0.14)',
+            fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#E8630A', pointBorderColor: '#0B0D12',
+            pointBorderWidth: 1.5, borderWidth: 2.5
+          },
+          {
+            label: 'Почиствания', data: cleanData, borderColor: '#6FCF97', backgroundColor: 'rgba(111,207,151,0.10)',
+            fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#6FCF97', pointBorderColor: '#0B0D12',
+            pointBorderWidth: 1.5, borderWidth: 2.5
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: reduceMotion ? false : { duration: 900, easing: 'easeOutQuart' },
+        plugins: { legend: { display: false }, tooltip: {
+          backgroundColor: 'rgba(18,20,27,0.94)', borderColor: 'rgba(255,255,255,0.14)', borderWidth: 1,
+          titleColor: '#F5F6F8', bodyColor: '#F5F6F8', padding: 10, titleFont: { family: 'Roboto', weight: '700' }, bodyFont: { family: 'Roboto' }
+        }},
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9AA1AE', font: { family: 'Roboto', size: 11 } } },
+          y: { beginAtZero: true, ticks: { precision:0, color: '#9AA1AE', font: { family: 'Roboto', size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+        }
+      }
+    });
+  }
+
+  /* ---------------- tabs + log ---------------- */
+  function renderTabsAndLog(){
+    const nav = $('tabsNav');
+    const panels = $('tabPanels');
+    nav.innerHTML = ''; panels.innerHTML = '';
+
+    const curKey = currentMonthKey();
+    const keySet = new Set(entries.map(e => monthKeyOf(e.date)));
+    keySet.add(curKey);
+
+    if(!keySet.has(activeTabKey)) activeTabKey = curKey;
+
+    $('logHint').textContent = entries.length + (entries.length === 1 ? ' запис общо' : ' записа общо');
+
+    /* current month — standalone tab */
+    const curBtn = document.createElement('button');
+    curBtn.className = 'tab-btn' + (activeTabKey === curKey ? ' active' : '');
+    curBtn.textContent = monthLabel(curKey);
+    curBtn.setAttribute('role','tab');
+    curBtn.setAttribute('aria-selected', activeTabKey === curKey ? 'true' : 'false');
+    curBtn.addEventListener('click', ()=>{ activeTabKey = curKey; renderTabsAndLog(); });
+    nav.appendChild(curBtn);
+
+    /* remaining months grouped by year */
+    const remaining = Array.from(keySet).filter(k => k !== curKey).sort().reverse();
+    const byYear = {};
+    remaining.forEach(k=>{
+      const y = k.slice(0,4);
+      (byYear[y] = byYear[y] || []).push(k);
+    });
+    const years = Object.keys(byYear).sort().reverse();
+
+    years.forEach(y=>{
+      const monthsInYear = byYear[y];
+      const isYearActive = monthsInYear.includes(activeTabKey);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'tab-year-wrap';
+
+      const yearBtn = document.createElement('button');
+      yearBtn.className = 'tab-btn' + (isYearActive ? ' active' : '');
+      yearBtn.innerHTML = `${y} <span class="chev">▾</span>`;
+      yearBtn.setAttribute('role','tab');
+      yearBtn.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        const willOpen = !wrap.classList.contains('open');
+        document.querySelectorAll('.tab-year-wrap.open').forEach(w => w.classList.remove('open'));
+        if(willOpen) wrap.classList.add('open');
+      });
+      wrap.appendChild(yearBtn);
+
+      const dd = document.createElement('div');
+      dd.className = 'year-dropdown';
+      monthsInYear.forEach(mk=>{
+        const [, mm] = mk.split('-');
+        const mBtn = document.createElement('button');
+        mBtn.className = 'dd-month' + (mk === activeTabKey ? ' active' : '');
+        const nm = monthNames[Number(mm)-1];
+        mBtn.textContent = nm.charAt(0).toUpperCase() + nm.slice(1);
+        mBtn.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          activeTabKey = mk;
+          wrap.classList.remove('open');
+          renderTabsAndLog();
+        });
+        dd.appendChild(mBtn);
+      });
+      wrap.appendChild(dd);
+
+      nav.appendChild(wrap);
+    });
+
+    /* single active panel */
+    const label = monthLabel(activeTabKey);
+    const items = entries.filter(e => monthKeyOf(e.date) === activeTabKey).sort((a,b)=> b.date.localeCompare(a.date));
+    const groupBags = items.reduce((s,e)=> s + (Number(e.bags)||0), 0);
+    const groupKg = groupBags * BAG_KG;
+
+    let html = `<div class="month-summary"><span class="totals">${fmt(groupBags)} чувала · ${fmt(groupKg)} кг</span></div>`;
+
+    if(items.length === 0){
+      html += `<div class="empty">Няма записи за ${label}.<br>Добави своя от формата по-горе.</div>`;
+    } else {
+      for(const e of items){
+        const cls = e.cleaned === true ? 'good' : (e.cleaned === false ? 'bad' : '');
+        const badgeTxt = e.cleaned === true ? 'Почистена' : (e.cleaned === false ? 'Не е почистена' : '—');
+        const notesHtml = e.notes ? ` <span class="notes-inline">(${escapeHtml(e.notes)})</span>` : '';
+        html += `
+          <div class="entry">
+            <span class="date">${formatDateShort(e.date)}</span>
+            <span class="amount"><b>${fmt(e.bags)}</b> чувала · <b>${fmt(totalKg(e))}</b> кг${notesHtml}</span>
+            <span class="badge ${cls}"><span class="dot"></span>${badgeTxt}</span>
+            <button class="del" title="Изтрий запис" data-id="${e.id}" aria-label="Изтрий запис от ${formatDateShort(e.date)}">✕</button>
+          </div>`;
+      }
+    }
+
+    const panel = document.createElement('div');
+    panel.className = 'tab-panel active anim-pop';
+    panel.setAttribute('role','tabpanel');
+    panel.innerHTML = html;
+    panels.appendChild(panel);
+
+    panel.querySelectorAll('.del').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        entries = entries.filter(e => e.id !== btn.dataset.id);
+        await saveEntries();
+        renderAll();
+      });
+    });
+
+    moveIndicator();
+  }
+
+  function moveIndicator(){
+    const nav = $('tabsNav');
+    const active = nav.querySelector('.tab-btn.active');
+    const indicator = $('tabIndicator');
+    if(!active){ indicator.style.width = '0'; return; }
+    const navRect = nav.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    indicator.style.width = activeRect.width + 'px';
+    indicator.style.transform = `translateX(${activeRect.left - navRect.left + nav.scrollLeft}px)`;
+  }
+
+  /* close year dropdowns when clicking anywhere else */
+  document.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-year-wrap.open').forEach(w => w.classList.remove('open'));
+  });
+
+  function renderAll(){
+    renderStats();
+    renderReminder();
+    renderChart();
+    renderTabsAndLog();
+  }
+
+  /* ---------------- form ---------------- */
+  $('fBags').addEventListener('input', ()=>{
+    const v = parseFloat($('fBags').value);
+    $('bagsPreview').textContent = (v > 0) ? `= ${fmt(v * BAG_KG)} кг` : '';
+  });
+
+  $('btnYes').addEventListener('click', ()=>{
+    cleanedState = true;
+    $('btnYes').setAttribute('aria-pressed','true'); $('btnNo').setAttribute('aria-pressed','false');
+  });
+  $('btnNo').addEventListener('click', ()=>{
+    cleanedState = false;
+    $('btnNo').setAttribute('aria-pressed','true'); $('btnYes').setAttribute('aria-pressed','false');
+  });
+
+  $('entryForm').addEventListener('submit', async (ev)=>{
+    ev.preventDefault();
+    const date = $('fDate').value;
+    const bags = parseFloat($('fBags').value);
+    const notes = $('fNotes').value.trim();
+    if(!date || !bags) return;
+
+    entries.push({ id: uid(), date, bags, cleaned: cleanedState, notes });
+    activeTabKey = monthKeyOf(date);
+    await saveEntries();
+    renderAll();
+
+    $('entryForm').reset();
+    $('bagsPreview').textContent = '';
+    cleanedState = null;
+    $('btnYes').setAttribute('aria-pressed','false'); $('btnNo').setAttribute('aria-pressed','false');
+    $('fDate').valueAsDate = new Date();
+    $('fDate').focus();
+  });
+
+  $('fDate').valueAsDate = new Date();
+
+  /* ---------------- export / import ---------------- */
+  function showMsg(text, isErr){
+    const el = $('toolbarMsg');
+    el.textContent = text;
+    el.className = 'toolbar-msg' + (isErr ? ' err' : '');
+  }
+
+  function buildExportText(){
+    const now = new Date();
+    const header = [
+      '# BurnIT backup',
+      `# generated: ${formatDateShort(now.toISOString().slice(0,10))} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+      '# format: id|date|bags|cleaned|notes   (cleaned: 1=да, 0=не, -=няма отговор)',
+      ''
+    ];
+    const lines = entries.map(e => {
+      const cleanedFlag = e.cleaned === true ? '1' : (e.cleaned === false ? '0' : '-');
+      const safeNotes = (e.notes || '').replace(/\|/g, '/').replace(/\n/g,' ');
+      return [e.id, e.date, e.bags, cleanedFlag, safeNotes].join('|');
+    });
+    return header.join('\n') + lines.join('\n') + '\n';
+  }
+
+  $('btnExport').addEventListener('click', ()=>{
+    const now = new Date();
+    const filename = `BurnIT_${pad(now.getDate())}.${pad(now.getMonth()+1)}.${String(now.getFullYear()).slice(2)}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.txt`;
+    const blob = new Blob([buildExportText()], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showMsg(`Изтеглено като ${filename}`);
+  });
+
+  $('btnImportTrigger').addEventListener('click', ()=> $('fileImport').click());
+
+  $('fileImport').addEventListener('change', async (ev)=>{
+    const file = ev.target.files[0];
+    if(!file) return;
+    try{
+      const text = await file.text();
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+      let added = 0, skipped = 0;
+      const existingIds = new Set(entries.map(e => e.id));
+
+      for(const line of lines){
+        const parts = line.split('|');
+        if(parts.length < 5){ skipped++; continue; }
+        const [id, date, bagsStr, cleanedFlag, ...notesParts] = parts;
+        const bags = parseFloat(bagsStr);
+        if(!id || !date || isNaN(bags) || bags < 0){ skipped++; continue; }
+        if(existingIds.has(id)){ skipped++; continue; }
+        entries.push({
+          id, date, bags,
+          cleaned: cleanedFlag === '1' ? true : (cleanedFlag === '0' ? false : null),
+          notes: notesParts.join('|') || ''
+        });
+        existingIds.add(id);
+        added++;
+      }
+
+      await saveEntries();
+      renderAll();
+      showMsg(added > 0 ? `Добавени ${added} нови записа (пропуснати ${skipped} дублиращи се).` : 'Няма нови записи за добавяне — вече са синхронизирани.');
+    }catch(err){
+      showMsg('Файлът не можа да се прочете. Провери дали е валиден BurnIT .txt файл.', true);
+    }
+    ev.target.value = '';
+  });
+
+  /* ---------------- bulk add (old months/years) ---------------- */
+  function parseBgDate(str){
+    const m = str.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if(!m) return null;
+    const [, d, mo, y] = m;
+    const dd = pad(parseInt(d,10)), mm = pad(parseInt(mo,10));
+    if(parseInt(d,10) < 1 || parseInt(d,10) > 31 || parseInt(mo,10) < 1 || parseInt(mo,10) > 12) return null;
+    return `${y}-${mm}-${dd}`;
+  }
+
+  function parseCleanedWord(str){
+    const s = (str || '').trim().toLowerCase();
+    if(s === 'да' || s === 'yes' || s === '1') return true;
+    if(s === 'не' || s === 'no' || s === '0') return false;
+    return null;
+  }
+
+  $('btnBulkAdd').addEventListener('click', async ()=>{
+    const raw = $('bulkText').value;
+    const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+    if(lines.length === 0){ showMsg('Няма въведени редове.', true); return; }
+
+    let added = 0, failed = 0;
+    let lastAddedMonthKey = null;
+
+    for(const line of lines){
+      const parts = line.split(',').map(p => p.trim());
+      if(parts.length < 2){ failed++; continue; }
+      const date = parseBgDate(parts[0]);
+      const bags = parseFloat(parts[1]);
+      if(!date || isNaN(bags) || bags < 0){ failed++; continue; }
+      const cleaned = parts.length >= 3 ? parseCleanedWord(parts[2]) : null;
+      const notes = parts.length >= 4 ? parts.slice(3).join(', ') : '';
+
+      entries.push({ id: uid(), date, bags, cleaned, notes });
+      lastAddedMonthKey = monthKeyOf(date);
+      added++;
+    }
+
+    if(added > 0){
+      activeTabKey = lastAddedMonthKey;
+      await saveEntries();
+      renderAll();
+      $('bulkText').value = '';
+    }
+
+    showMsg(
+      added > 0
+        ? `Добавени ${added} стари записа${failed ? ` (пропуснати ${failed} реда с грешен формат)` : ''}.`
+        : `Нищо не бе добавено — провери формата на редовете.`,
+      added === 0
+    );
+  });
+
+  window.addEventListener('resize', moveIndicator);
+
+  loadEntries();
+})();
+</script>
+
+</body>
+</html>
