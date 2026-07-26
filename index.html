@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{
@@ -94,8 +95,45 @@
   @media (max-width: 720px){ .stat-row{ grid-template-columns: 1fr 1fr; } }
   @media (max-width: 440px){ .stat-row{ grid-template-columns: 1fr; } }
 
+  .stats-filter-row{ display:flex; align-items:center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .stats-filter-label{ font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; display:flex; align-items:center; gap:7px; }
+  .stats-filter-label i{ font-size: 12px; color: var(--ember-light); }
+
+  .stats-filter-wrap{ position: relative; }
+  .stats-filter-btn{
+    display:inline-flex; align-items:center; gap:10px; background: rgba(255,255,255,0.045); border: 1px solid var(--line-strong);
+    color: var(--text); font-family: var(--font); font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 10px;
+    cursor: pointer; min-height: 42px; transition: color .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .stats-filter-btn:hover{ background: rgba(255,255,255,0.07); }
+  .stats-filter-wrap.open .stats-filter-btn{ color: var(--ember-light); background: var(--ember-dim); border-color: rgba(232,99,10,0.4); }
+  .stats-filter-btn .chev{ font-size: 10px; opacity: .75; transition: transform .2s ease; }
+  .stats-filter-wrap.open .chev{ transform: rotate(180deg); }
+
+  .stats-filter-dropdown{
+    position: absolute; top: 100%; left: 0; margin-top: 8px; min-width: 200px; max-height: 320px; overflow-y: auto;
+    padding: 6px; display: none; flex-direction: column; gap: 2px; z-index: 30;
+    background: rgba(20,22,29,0.92); border: 1px solid var(--card-border); border-radius: 14px;
+    backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
+    box-shadow: 0 20px 46px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  .stats-filter-wrap.open .stats-filter-dropdown{ display: flex; }
+  .stats-filter-dropdown .sf-year-label{
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-dim);
+    padding: 8px 12px 4px;
+  }
+  .sf-option{
+    background: none; border: none; color: var(--muted); font-family: var(--font); font-size: 13.5px; font-weight: 600;
+    padding: 9px 12px; border-radius: 9px; text-align: left; cursor: pointer; transition: all .15s ease;
+    display:flex; align-items:center; justify-content: space-between; gap:8px;
+  }
+  .sf-option:hover{ background: rgba(255,255,255,0.07); color: var(--text); }
+  .sf-option.active{ background: var(--ember-dim); color: var(--ember-light); }
+  .sf-option.active i{ color: var(--ember-light); }
+
   .stat{ padding: 16px 18px; position: relative; overflow: hidden; }
-  .stat .label{ font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat .label{ font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display:flex; align-items:center; gap:7px; }
+  .stat .label i{ font-size: 12px; color: var(--ember-light); }
   .stat .value{ font-size: clamp(22px, 4vw, 28px); font-weight: 900; color: var(--text); }
   .stat .value span{ font-size: 14px; color: var(--muted); font-weight: 500; }
 
@@ -119,7 +157,8 @@
   /* ---------- sections ---------- */
   section{ margin-bottom: 46px; }
   .section-head{ display:flex; align-items:baseline; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
-  .section-head h2{ font-size: 21px; font-weight: 900; margin:0; }
+  .section-head h2{ font-size: 21px; font-weight: 900; margin:0; display:flex; align-items:center; gap:10px; }
+  .section-head h2 i{ font-size: 17px; color: var(--ember-light); }
   .section-head .hint{ color: var(--muted); font-size: 13px; }
 
   /* ---------- chart ---------- */
@@ -161,7 +200,7 @@
   .toggle-btn{
     flex:1; padding: 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(255,255,255,0.03);
     color: var(--muted); font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
-    transition: all .15s ease; min-height: 46px;
+    transition: all .15s ease; min-height: 46px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
   }
   .toggle-btn:hover{ border-color: var(--line-strong); background: rgba(255,255,255,0.07); }
   .toggle-btn[aria-pressed="true"].yes{ background: var(--good-dim); border-color: var(--good); color: var(--good); }
@@ -173,6 +212,7 @@
     font-family: var(--font); font-weight: 700; font-size: 15px; padding: 13px 24px; border-radius: 10px;
     cursor: pointer; letter-spacing: 0.01em; transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
     min-height: 46px; box-shadow: 0 8px 22px rgba(232,99,10,0.32), inset 0 1px 0 rgba(255,255,255,0.28);
+    display:inline-flex; align-items:center; justify-content:center; gap:9px;
   }
   .btn-primary:hover{ filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(232,99,10,0.4), inset 0 1px 0 rgba(255,255,255,0.28); }
   .btn-primary:active{ transform: translateY(0) scale(.98); }
@@ -271,14 +311,25 @@
 <div class="wrap">
 
   <header class="hero anim-rise">
-    <div class="eyebrow">BurnIT · Дневник за отопление</div>
+    <div class="eyebrow"><i class="fa-solid fa-fire"></i>BurnIT · Дневник за отопление</div>
     <h1>Склад за пелети</h1>
     <p class="sub">Всяко зареждане, всяко почистване на горелката — на едно място. Чувалите тежат фиксирано по 15&nbsp;кг.</p>
 
+    <div class="stats-filter-row">
+      <span class="stats-filter-label"><i class="fa-solid fa-calendar-days"></i>Период на статистиката</span>
+      <div class="stats-filter-wrap" id="statsFilterWrap">
+        <button type="button" class="stats-filter-btn" id="statsFilterBtn">
+          <span id="statsFilterBtnText">Общо (всички години)</span>
+          <i class="fa-solid fa-chevron-down chev"></i>
+        </button>
+        <div class="stats-filter-dropdown" id="statsFilterDropdown"></div>
+      </div>
+    </div>
+
     <div class="stat-row">
-      <div class="stat glass"><div class="label">Общо заредено</div><div class="value" id="statTotalKg">0 <span>кг</span></div></div>
-      <div class="stat glass"><div class="label">Общо чували</div><div class="value" id="statTotalBags">0 <span>бр.</span></div></div>
-      <div class="stat glass"><div class="label">Последно почистване</div><div class="value" id="statLastClean" style="font-size:16px; padding-top:5px;">—</div></div>
+      <div class="stat glass"><div class="label" id="statKgLabel"><i class="fa-solid fa-weight-hanging"></i>Общо заредено</div><div class="value" id="statTotalKg">0 <span>кг</span></div></div>
+      <div class="stat glass"><div class="label" id="statBagsLabel"><i class="fa-solid fa-boxes-stacked"></i>Общо чували</div><div class="value" id="statTotalBags">0 <span>бр.</span></div></div>
+      <div class="stat glass"><div class="label"><i class="fa-solid fa-broom"></i>Последно почистване</div><div class="value" id="statLastClean" style="font-size:16px; padding-top:5px;">—</div></div>
     </div>
 
     <div class="reminder-banner glass" id="reminderBanner"></div>
@@ -286,13 +337,14 @@
 
   <section aria-labelledby="chartHeading" class="anim-rise" style="animation-delay:.06s">
     <div class="section-head">
-      <h2 id="chartHeading">Активност във времето</h2>
+      <h2 id="chartHeading"><i class="fa-solid fa-chart-line"></i>Активност във времето</h2>
       <span class="hint">зареждания и почиствания по месец</span>
     </div>
     <div class="chart-card glass">
       <div class="chart-legend">
         <span class="li"><span class="sw" style="background:var(--ember);"></span>Зареждания</span>
         <span class="li"><span class="sw" style="background:var(--good);"></span>Почиствания</span>
+        <span class="li"><span class="sw" style="background:#5B8DEF;"></span>Чували (бр.)</span>
       </div>
       <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
     </div>
@@ -300,7 +352,7 @@
 
   <section aria-labelledby="formHeading" class="anim-rise" style="animation-delay:.1s">
     <div class="section-head">
-      <h2 id="formHeading">Ново зареждане</h2>
+      <h2 id="formHeading"><i class="fa-solid fa-truck-ramp-box"></i>Ново зареждане</h2>
       <span class="hint">попълни и добави</span>
     </div>
 
@@ -318,8 +370,8 @@
         <div class="field full">
           <label id="cleanLabel">Горелката почистена ли е</label>
           <div class="toggle-group" role="group" aria-labelledby="cleanLabel">
-            <button type="button" class="toggle-btn yes" id="btnYes" aria-pressed="false">Да</button>
-            <button type="button" class="toggle-btn no" id="btnNo" aria-pressed="false">Не</button>
+            <button type="button" class="toggle-btn yes" id="btnYes" aria-pressed="false"><i class="fa-solid fa-check"></i> Да</button>
+            <button type="button" class="toggle-btn no" id="btnNo" aria-pressed="false"><i class="fa-solid fa-xmark"></i> Не</button>
           </div>
         </div>
         <div class="field full">
@@ -327,19 +379,19 @@
           <input type="text" id="fNotes" placeholder="напр. доставчик, цена...">
         </div>
       </div>
-      <div class="submit-row"><button type="submit" class="btn-primary">Добави запис →</button></div>
+      <div class="submit-row"><button type="submit" class="btn-primary"><i class="fa-solid fa-plus"></i>Добави запис</button></div>
     </form>
   </section>
 
   <section aria-labelledby="dataHeading" class="anim-rise" style="animation-delay:.14s">
     <div class="section-head">
-      <h2 id="dataHeading">Данни и синхронизация</h2>
+      <h2 id="dataHeading"><i class="fa-solid fa-cloud-arrow-up"></i>Данни и синхронизация</h2>
       <span class="hint">между телефон и компютър</span>
     </div>
     <div class="card glass">
       <div class="data-toolbar">
-        <button type="button" class="btn-ghost" id="btnExport">⭳ Изтегли .txt резервно копие</button>
-        <button type="button" class="btn-ghost" id="btnImportTrigger">⭱ Качи .txt файл</button>
+        <button type="button" class="btn-ghost" id="btnExport"><i class="fa-solid fa-download"></i>Изтегли .txt резервно копие</button>
+        <button type="button" class="btn-ghost" id="btnImportTrigger"><i class="fa-solid fa-upload"></i>Качи .txt файл</button>
         <input type="file" id="fileImport" accept=".txt" class="sr-only">
       </div>
       <div class="toolbar-msg" id="toolbarMsg"></div>
@@ -348,14 +400,14 @@
 
       <div class="bulk-add">
         <div class="bulk-head">
-          <strong>Добави стари записи наведнъж</strong>
+          <strong><i class="fa-solid fa-layer-group" style="margin-right:8px; color:var(--ember-light);"></i>Добави стари записи наведнъж</strong>
           <span class="hint">за месеци и години назад, които не си въвеждал(а) досега</span>
         </div>
         <p class="bulk-desc">Един ред за всяко зареждане, във формат:<br>
           <code>дд.мм.гггг, брой чували, да/не, бележка</code> — бележката е незадължителна. За запис само с почистване (без зареждане) въведи <code>0</code> за брой чували.</p>
         <textarea id="bulkText" rows="5" placeholder="напр.&#10;15.01.2025, 6, да, зимен запас&#10;03.11.2024, 8, не&#10;20.09.2024, 5, да&#10;10.12.2024, 0, да, само почистване"></textarea>
         <div class="submit-row">
-          <button type="button" class="btn-primary" id="btnBulkAdd">Добави записите</button>
+          <button type="button" class="btn-primary" id="btnBulkAdd"><i class="fa-solid fa-layer-group"></i>Добави записите</button>
         </div>
       </div>
     </div>
@@ -363,7 +415,7 @@
 
   <section aria-labelledby="logHeading" class="anim-rise" style="animation-delay:.18s">
     <div class="section-head">
-      <h2 id="logHeading">История по месеци</h2>
+      <h2 id="logHeading"><i class="fa-solid fa-clock-rotate-left"></i>История по месеци</h2>
       <span class="hint" id="logHint"></span>
     </div>
     <div class="tabs-nav" id="tabsNav" role="tablist"></div>
@@ -386,6 +438,7 @@
   let cleanedState = null;
   let activeTabKey = null;
   let chartInstance = null;
+  let statsFilterValue = 'all';
 
   const $ = (id) => document.getElementById(id);
 
@@ -460,14 +513,83 @@
     requestAnimationFrame(step);
   }
 
+  /* ---------------- stats filter ---------------- */
+  function entriesForStatsFilter(){
+    if(statsFilterValue === 'all') return entries;
+    if(statsFilterValue.length === 4) return entries.filter(e => e.date.slice(0,4) === statsFilterValue);
+    return entries.filter(e => monthKeyOf(e.date) === statsFilterValue);
+  }
+
+  function statsFilterLabel(value, years, byYear){
+    if(value === 'all') return 'Общо (всички години)';
+    if(value.length === 4) return `Цялата ${value}`;
+    const [y, mm] = value.split('-');
+    const nm = monthNames[Number(mm)-1];
+    return `${nm.charAt(0).toUpperCase()+nm.slice(1)} ${y}`;
+  }
+
+  function buildStatsFilterOptions(){
+    const dd = $('statsFilterDropdown');
+    const prevValue = statsFilterValue;
+
+    const keySet = new Set(entries.map(e => monthKeyOf(e.date)));
+    keySet.add(currentMonthKey());
+    const byYear = {};
+    keySet.forEach(k=>{
+      const y = k.slice(0,4);
+      (byYear[y] = byYear[y] || new Set()).add(k);
+    });
+    const years = Object.keys(byYear).sort().reverse();
+
+    const validValues = new Set(['all', ...years, ...Array.from(keySet)]);
+    if(!validValues.has(prevValue)) statsFilterValue = 'all';
+
+    let html = `<button type="button" class="sf-option${statsFilterValue==='all' ? ' active' : ''}" data-sf="all"><span><i class="fa-solid fa-layer-group" style="margin-right:8px; width:14px;"></i>Общо (всички години)</span>${statsFilterValue==='all' ? '<i class="fa-solid fa-check"></i>' : ''}</button>`;
+    years.forEach(y=>{
+      html += `<div class="sf-year-label">${y}</div>`;
+      const yActive = statsFilterValue === y;
+      html += `<button type="button" class="sf-option${yActive ? ' active' : ''}" data-sf="${y}"><span><i class="fa-solid fa-calendar" style="margin-right:8px; width:14px;"></i>Цялата ${y}</span>${yActive ? '<i class="fa-solid fa-check"></i>' : ''}</button>`;
+      const monthsInYear = Array.from(byYear[y]).sort().reverse();
+      monthsInYear.forEach(mk=>{
+        const [, mm] = mk.split('-');
+        const nm = monthNames[Number(mm)-1];
+        const mActive = statsFilterValue === mk;
+        html += `<button type="button" class="sf-option${mActive ? ' active' : ''}" data-sf="${mk}"><span style="padding-left:22px;">${nm.charAt(0).toUpperCase()+nm.slice(1)}</span>${mActive ? '<i class="fa-solid fa-check"></i>' : ''}</button>`;
+      });
+    });
+
+    dd.innerHTML = html;
+    $('statsFilterBtnText').textContent = statsFilterLabel(statsFilterValue, years, byYear);
+
+    dd.querySelectorAll('.sf-option').forEach(btn=>{
+      btn.addEventListener('click', (ev)=>{
+        ev.stopPropagation();
+        statsFilterValue = btn.dataset.sf;
+        $('statsFilterWrap').classList.remove('open');
+        renderStats();
+      });
+    });
+  }
+
   /* ---------------- stats ---------------- */
   function renderStats(){
-    const allKg = entries.reduce((s,e)=> s + totalKg(e), 0);
-    const allBags = entries.reduce((s,e)=> s + (Number(e.bags)||0), 0);
-    animateNumber($('statTotalKg'), allKg, 'кг');
-    animateNumber($('statTotalBags'), allBags, 'бр.');
+    buildStatsFilterOptions();
+    const filtered = entriesForStatsFilter();
 
-    const lastClean = [...entries].sort((a,b)=> b.date.localeCompare(a.date)).find(e => e.cleaned !== null && e.cleaned !== undefined);
+    const periodKg = filtered.reduce((s,e)=> s + totalKg(e), 0);
+    const periodBags = filtered.reduce((s,e)=> s + (Number(e.bags)||0), 0);
+    animateNumber($('statTotalKg'), periodKg, 'кг');
+    animateNumber($('statTotalBags'), periodBags, 'бр.');
+
+    if(statsFilterValue === 'all'){
+      $('statKgLabel').innerHTML = '<i class="fa-solid fa-weight-hanging"></i>Общо заредено';
+      $('statBagsLabel').innerHTML = '<i class="fa-solid fa-boxes-stacked"></i>Общо чували';
+    } else {
+      $('statKgLabel').innerHTML = '<i class="fa-solid fa-weight-hanging"></i>Заредено за периода';
+      $('statBagsLabel').innerHTML = '<i class="fa-solid fa-boxes-stacked"></i>Чували за периода';
+    }
+
+    const lastClean = [...filtered].sort((a,b)=> b.date.localeCompare(a.date)).find(e => e.cleaned !== null && e.cleaned !== undefined);
     const statEl = $('statLastClean');
     if(!lastClean){ statEl.innerHTML = '—'; }
     else{
@@ -514,20 +636,20 @@
 
     if(r.status === 'unknown'){
       el.className = 'reminder-banner glass neutral';
-      el.innerHTML = `<span class="ric">🕐</span><span>Все още няма отбелязано почистване — добави запис с „почистена: да“, за да тръгнат напомнянията (${r.seasonLabel}).</span>`;
+      el.innerHTML = `<span class="ric"><i class="fa-solid fa-clock"></i></span><span>Все още няма отбелязано почистване — добави запис с „почистена: да“, за да тръгнат напомнянията (${r.seasonLabel}).</span>`;
       return;
     }
     const dueStr = formatDateShort(isoOf(r.dueDate));
     if(r.status === 'overdue'){
       const days = Math.abs(r.diffDays);
       el.className = 'reminder-banner glass bad';
-      el.innerHTML = `<span class="ric">⚠</span><span><b>Просрочено почистване</b> — трябваше да е направено на ${dueStr} (${days} ${days===1?'ден':'дни'} закъснение) · последно на ${formatDateShort(isoOf(r.lastDate))} · ${r.seasonLabel}</span>`;
+      el.innerHTML = `<span class="ric"><i class="fa-solid fa-triangle-exclamation"></i></span><span><b>Просрочено почистване</b> — трябваше да е направено на ${dueStr} (${days} ${days===1?'ден':'дни'} закъснение) · последно на ${formatDateShort(isoOf(r.lastDate))} · ${r.seasonLabel}</span>`;
     } else if(r.status === 'today'){
       el.className = 'reminder-banner glass warn';
-      el.innerHTML = `<span class="ric">●</span><span><b>Днес</b> е крайният срок за следващото почистване · ${r.seasonLabel}</span>`;
+      el.innerHTML = `<span class="ric"><i class="fa-solid fa-circle-exclamation"></i></span><span><b>Днес</b> е крайният срок за следващото почистване · ${r.seasonLabel}</span>`;
     } else {
       el.className = 'reminder-banner glass good';
-      el.innerHTML = `<span class="ric">✓</span><span>Следващо почистване до <b>${dueStr}</b> (остават ${r.diffDays} ${r.diffDays===1?'ден':'дни'}) · ${r.seasonLabel}</span>`;
+      el.innerHTML = `<span class="ric"><i class="fa-solid fa-circle-check"></i></span><span>Следващо почистване до <b>${dueStr}</b> (остават ${r.diffDays} ${r.diffDays===1?'ден':'дни'}) · ${r.seasonLabel}</span>`;
     }
   }
 
@@ -551,6 +673,7 @@
     const labels = months.map(k => { const [yy,mm] = k.split('-'); return monthShort[Number(mm)-1] + " '" + yy.slice(2); });
     const loadData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k).length);
     const cleanData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k && e.cleaned === true).length);
+    const bagsData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k).reduce((sum,e)=> sum + (e.bags||0), 0));
 
     const ctx = $('activityChart').getContext('2d');
     if(chartInstance) chartInstance.destroy();
@@ -569,6 +692,11 @@
             label: 'Почиствания', data: cleanData, borderColor: '#6FCF97', backgroundColor: 'rgba(111,207,151,0.10)',
             fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#6FCF97', pointBorderColor: '#0B0D12',
             pointBorderWidth: 1.5, borderWidth: 2.5
+          },
+          {
+            label: 'Чували (бр.)', data: bagsData, borderColor: '#5B8DEF', backgroundColor: 'rgba(91,141,239,0.10)',
+            fill: false, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#5B8DEF', pointBorderColor: '#0B0D12',
+            pointBorderWidth: 1.5, borderWidth: 2.5, yAxisID: 'y1'
           }
         ]
       },
@@ -581,7 +709,8 @@
         }},
         scales: {
           x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9AA1AE', font: { family: 'Roboto', size: 11 } } },
-          y: { beginAtZero: true, ticks: { precision:0, color: '#9AA1AE', font: { family: 'Roboto', size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+          y: { beginAtZero: true, ticks: { precision:0, color: '#9AA1AE', font: { family: 'Roboto', size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+          y1: { beginAtZero: true, position: 'right', ticks: { precision:0, color: '#5B8DEF', font: { family: 'Roboto', size: 11 } }, grid: { drawOnChartArea: false } }
         }
       }
     });
@@ -628,7 +757,7 @@
 
       const yearBtn = document.createElement('button');
       yearBtn.className = 'tab-btn' + (isYearActive ? ' active' : '');
-      yearBtn.innerHTML = `${y} <span class="chev">▾</span>`;
+      yearBtn.innerHTML = `${y} <i class="fa-solid fa-chevron-down chev"></i>`;
       yearBtn.setAttribute('role','tab');
       yearBtn.addEventListener('click', (ev)=>{
         ev.stopPropagation();
@@ -679,7 +808,7 @@
             <span class="date">${formatDateShort(e.date)}</span>
             <span class="amount"><b>${fmt(e.bags)}</b> чувала · <b>${fmt(totalKg(e))}</b> кг${notesHtml}</span>
             <span class="badge ${cls}"><span class="dot"></span>${badgeTxt}</span>
-            <button class="del" title="Изтрий запис" data-id="${e.id}" aria-label="Изтрий запис от ${formatDateShort(e.date)}">✕</button>
+            <button class="del" title="Изтрий запис" data-id="${e.id}" aria-label="Изтрий запис от ${formatDateShort(e.date)}"><i class="fa-solid fa-trash-can"></i></button>
           </div>`;
       }
     }
@@ -715,6 +844,7 @@
   /* close year dropdowns when clicking anywhere else */
   document.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-year-wrap.open').forEach(w => w.classList.remove('open'));
+    $('statsFilterWrap').classList.remove('open');
   });
 
   function renderAll(){
@@ -725,6 +855,14 @@
   }
 
   /* ---------------- form ---------------- */
+  $('statsFilterBtn').addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const wrap = $('statsFilterWrap');
+    const willOpen = !wrap.classList.contains('open');
+    document.querySelectorAll('.tab-year-wrap.open').forEach(w => w.classList.remove('open'));
+    wrap.classList.toggle('open', willOpen);
+  });
+
   $('fBags').addEventListener('input', ()=>{
     const v = parseFloat($('fBags').value);
     $('bagsPreview').textContent = (v > 0) ? `= ${fmt(v * BAG_KG)} кг` : '';
