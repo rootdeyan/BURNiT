@@ -33,7 +33,7 @@
   }
 
   *{ box-sizing: border-box; }
-  html{ scroll-behavior: smooth; }
+  html{ scroll-behavior: smooth; background: #08090D; height: 100%; overscroll-behavior-y: none; }
 
   body{
     margin:0;
@@ -43,12 +43,19 @@
       radial-gradient(800px 520px at 50% 115%, rgba(111,207,151,0.06), transparent 60%),
       linear-gradient(180deg, #0D0F15, #08090D 55%, #0B0D12);
     background-attachment: fixed;
+    background-color: #08090D;
     color: var(--text);
     font-family: var(--font);
     font-weight: 400;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+  }
+
+  @media (max-width: 768px){
+    body{ background-attachment: scroll; }
   }
 
   ::selection{ background: var(--ember-dim); color: var(--text); }
@@ -104,6 +111,8 @@
     display:inline-flex; align-items:center; gap:10px; background: rgba(255,255,255,0.045); border: 1px solid var(--line-strong);
     color: var(--text); font-family: var(--font); font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 10px;
     cursor: pointer; min-height: 42px; transition: color .15s ease, background .15s ease, border-color .15s ease;
+    backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .stats-filter-btn:hover{ background: rgba(255,255,255,0.07); }
   .stats-filter-wrap.open .stats-filter-btn{ color: var(--ember-light); background: var(--ember-dim); border-color: rgba(232,99,10,0.4); }
@@ -198,9 +207,10 @@
 
   .toggle-group{ display:flex; gap:8px; }
   .toggle-btn{
-    flex:1; padding: 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(255,255,255,0.03);
+    flex:1; padding: 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(255,255,255,0.035);
     color: var(--muted); font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
     transition: all .15s ease; min-height: 46px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
   }
   .toggle-btn:hover{ border-color: var(--line-strong); background: rgba(255,255,255,0.07); }
   .toggle-btn[aria-pressed="true"].yes{ background: var(--good-dim); border-color: var(--good); color: var(--good); }
@@ -208,20 +218,23 @@
 
   .submit-row{ display:flex; justify-content:flex-end; margin-top: 18px; }
   .btn-primary{
-    background: linear-gradient(180deg, var(--ember-light), var(--ember)); color: #1a1108; border: none;
+    background: linear-gradient(180deg, rgba(244,161,92,0.28), rgba(232,99,10,0.22));
+    color: var(--ember-light); border: 1px solid rgba(244,161,92,0.45);
     font-family: var(--font); font-weight: 700; font-size: 15px; padding: 13px 24px; border-radius: 10px;
-    cursor: pointer; letter-spacing: 0.01em; transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
-    min-height: 46px; box-shadow: 0 8px 22px rgba(232,99,10,0.32), inset 0 1px 0 rgba(255,255,255,0.28);
+    cursor: pointer; letter-spacing: 0.01em; transition: transform .12s ease, filter .12s ease, box-shadow .12s ease, background .12s ease;
+    min-height: 46px; box-shadow: 0 8px 26px rgba(232,99,10,0.22), inset 0 1px 0 rgba(255,255,255,0.14);
+    backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
     display:inline-flex; align-items:center; justify-content:center; gap:9px;
   }
-  .btn-primary:hover{ filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 10px 26px rgba(232,99,10,0.4), inset 0 1px 0 rgba(255,255,255,0.28); }
+  .btn-primary:hover{ background: linear-gradient(180deg, rgba(244,161,92,0.38), rgba(232,99,10,0.3)); transform: translateY(-1px); box-shadow: 0 10px 30px rgba(232,99,10,0.3), inset 0 1px 0 rgba(255,255,255,0.16); }
   .btn-primary:active{ transform: translateY(0) scale(.98); }
 
   .btn-ghost{
-    background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--line-strong);
+    background: rgba(255,255,255,0.045); color: var(--text); border: 1px solid var(--line-strong);
     font-family: var(--font); font-weight: 700; font-size: 13.5px; padding: 10px 16px; border-radius: 10px;
     cursor: pointer; transition: all .15s ease; display:inline-flex; align-items:center; gap:8px; min-height: 42px;
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .btn-ghost:hover{ border-color: var(--ember); color: var(--ember-light); background: rgba(255,255,255,0.08); }
 
@@ -238,7 +251,7 @@
   #bulkText{
     width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box;
     background: rgba(255,255,255,0.035); border: 1px solid var(--line-strong); color: var(--text);
-    font-family: var(--font); font-size: 14.5px; padding: 12px; border-radius: 10px; resize: vertical;
+    font-family: var(--font); font-size: 16px; padding: 12px; border-radius: 10px; resize: vertical;
     transition: border-color .15s ease;
   }
   #bulkText:focus{ border-color: var(--ember); }
@@ -254,7 +267,7 @@
     display:inline-flex; align-items:center; gap:6px;
   }
   .tab-btn:hover{ color: var(--text); background: rgba(255,255,255,0.05); }
-  .tab-btn.active{ color: var(--ember-light); background: var(--ember-dim); }
+  .tab-btn.active{ color: var(--ember-light); background: var(--ember-dim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   .tab-btn .chev{ font-size: 9px; opacity: .75; transition: transform .2s ease; }
   .tab-year-wrap{ position: relative; }
   .tab-year-wrap.open .chev, .tab-year-wrap:hover .chev{ transform: rotate(180deg); }
@@ -289,15 +302,31 @@
   }
   .entry:last-child{ border-bottom: none; }
   @media (max-width: 560px){
-    .entry{ grid-template-columns: 1fr auto; row-gap: 6px; }
-    .entry .amount{ order: 3; grid-column: 1/-1; }
+    .entry{
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "date del"
+        "amount amount"
+        "badge badge";
+      row-gap: 8px;
+      align-items: center;
+    }
+    .entry .date{ grid-area: date; }
+    .entry .del{ grid-area: del; justify-self: end; }
+    .entry .amount{ grid-area: amount; }
+    .entry .badge{ grid-area: badge; justify-self: start; }
   }
   .entry .date{ font-size: 13.5px; font-weight: 500; color: var(--muted); }
   .entry .amount{ font-size: 14.5px; }
   .entry .amount b{ color: var(--text); font-weight: 700; }
   .entry .notes-inline{ font-size: 13px; color: var(--muted); font-style: italic; font-weight: 400; }
-  .entry .del{ background:none; border:none; color: var(--muted-dim); cursor:pointer; font-size:18px; padding:6px 8px; line-height:1; border-radius:8px; min-width:36px; min-height:36px; }
-  .entry .del:hover{ color: var(--bad); background: var(--bad-dim); }
+  .entry .del{
+    background: rgba(255,255,255,0.035); border: 1px solid var(--line-strong); color: var(--muted-dim); cursor:pointer;
+    font-size:14px; padding:6px 8px; line-height:1; border-radius:9px; min-width:36px; min-height:36px;
+    backdrop-filter: blur(12px) saturate(160%); -webkit-backdrop-filter: blur(12px) saturate(160%);
+    transition: all .15s ease; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .entry .del:hover{ color: var(--bad); background: var(--bad-dim); border-color: rgba(235,91,91,0.4); }
 
   .empty{ text-align:center; padding: 44px 18px; border: 1px dashed var(--line-strong); border-radius: var(--radius); color: var(--muted); font-size: 14.5px; }
 
@@ -338,7 +367,7 @@
   <section aria-labelledby="chartHeading" class="anim-rise" style="animation-delay:.06s">
     <div class="section-head">
       <h2 id="chartHeading"><i class="fa-solid fa-chart-line"></i>Активност във времето</h2>
-      <span class="hint">зареждания и почиствания по месец</span>
+      <span class="hint" id="chartHint">зареждания и почиствания по месец</span>
     </div>
     <div class="chart-card glass">
       <div class="chart-legend">
@@ -567,6 +596,7 @@
         statsFilterValue = btn.dataset.sf;
         $('statsFilterWrap').classList.remove('open');
         renderStats();
+        renderChart();
       });
     });
   }
@@ -654,26 +684,58 @@
   }
 
   /* ---------------- chart ---------------- */
+  function daysInMonth(y, m){ return new Date(y, m, 0).getDate(); }
+
   function renderChart(){
-    const keys = entries.map(e => monthKeyOf(e.date));
-    keys.push(currentMonthKey());
-    let minKey = keys.sort()[0];
-    let maxKey = keys.sort()[keys.length-1];
+    let labels, loadData, cleanData, bagsData, hintText;
 
-    const [minY, minM] = minKey.split('-').map(Number);
-    const [maxY, maxM] = maxKey.split('-').map(Number);
+    if(statsFilterValue.length === 7){
+      /* single month selected — show daily breakdown */
+      const [y, m] = statsFilterValue.split('-').map(Number);
+      const dCount = daysInMonth(y, m);
+      const days = [];
+      for(let d=1; d<=dCount; d++) days.push(y + '-' + pad(m) + '-' + pad(d));
 
-    const months = [];
-    let y = minY, m = minM;
-    while(y < maxY || (y === maxY && m <= maxM)){
-      months.push(y + '-' + pad(m));
-      m++; if(m > 12){ m = 1; y++; }
+      labels = days.map(iso => String(Number(iso.slice(8,10))));
+      loadData = days.map(iso => entries.filter(e => e.date === iso).length);
+      cleanData = days.map(iso => entries.filter(e => e.date === iso && e.cleaned === true).length);
+      bagsData = days.map(iso => entries.filter(e => e.date === iso).reduce((s,e)=> s + (e.bags||0), 0));
+      hintText = 'зареждания и почиствания по ден · ' + monthLabel(statsFilterValue);
+    } else {
+      /* 'all' or a specific year — show months */
+      let minKey, maxKey;
+      if(statsFilterValue.length === 4){
+        minKey = statsFilterValue + '-01';
+        maxKey = statsFilterValue + '-12';
+      } else {
+        const keys = entries.map(e => monthKeyOf(e.date));
+        keys.push(currentMonthKey());
+        minKey = keys.sort()[0];
+        maxKey = keys.sort()[keys.length-1];
+      }
+
+      const [minY, minM] = minKey.split('-').map(Number);
+      const [maxY, maxM] = maxKey.split('-').map(Number);
+
+      const months = [];
+      let y = minY, m = minM;
+      while(y < maxY || (y === maxY && m <= maxM)){
+        months.push(y + '-' + pad(m));
+        m++; if(m > 12){ m = 1; y++; }
+      }
+
+      const scopedEntries = statsFilterValue.length === 4 ? entries.filter(e => e.date.slice(0,4) === statsFilterValue) : entries;
+
+      labels = months.map(k => { const [yy,mm] = k.split('-'); return monthShort[Number(mm)-1] + " '" + yy.slice(2); });
+      loadData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k).length);
+      cleanData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k && e.cleaned === true).length);
+      bagsData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k).reduce((sum,e)=> sum + (e.bags||0), 0));
+      hintText = statsFilterValue.length === 4
+        ? `зареждания и почиствания по месец · ${statsFilterValue}`
+        : 'зареждания и почиствания по месец';
     }
 
-    const labels = months.map(k => { const [yy,mm] = k.split('-'); return monthShort[Number(mm)-1] + " '" + yy.slice(2); });
-    const loadData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k).length);
-    const cleanData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k && e.cleaned === true).length);
-    const bagsData = months.map(k => entries.filter(e => monthKeyOf(e.date) === k).reduce((sum,e)=> sum + (e.bags||0), 0));
+    $('chartHint').textContent = hintText;
 
     const ctx = $('activityChart').getContext('2d');
     if(chartInstance) chartInstance.destroy();
@@ -685,17 +747,17 @@
         datasets: [
           {
             label: 'Зареждания', data: loadData, borderColor: '#E8630A', backgroundColor: 'rgba(232,99,10,0.14)',
-            fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#E8630A', pointBorderColor: '#0B0D12',
+            fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: '#E8630A', pointBorderColor: '#0B0D12',
             pointBorderWidth: 1.5, borderWidth: 2.5
           },
           {
             label: 'Почиствания', data: cleanData, borderColor: '#6FCF97', backgroundColor: 'rgba(111,207,151,0.10)',
-            fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#6FCF97', pointBorderColor: '#0B0D12',
+            fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: '#6FCF97', pointBorderColor: '#0B0D12',
             pointBorderWidth: 1.5, borderWidth: 2.5
           },
           {
             label: 'Чували (бр.)', data: bagsData, borderColor: '#5B8DEF', backgroundColor: 'rgba(91,141,239,0.10)',
-            fill: false, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#5B8DEF', pointBorderColor: '#0B0D12',
+            fill: false, tension: 0.4, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: '#5B8DEF', pointBorderColor: '#0B0D12',
             pointBorderWidth: 1.5, borderWidth: 2.5, yAxisID: 'y1'
           }
         ]
@@ -703,12 +765,14 @@
       options: {
         responsive: true, maintainAspectRatio: false,
         animation: reduceMotion ? false : { duration: 900, easing: 'easeOutQuart' },
+        interaction: { mode: 'index', intersect: false },
         plugins: { legend: { display: false }, tooltip: {
+          mode: 'index', intersect: false,
           backgroundColor: 'rgba(18,20,27,0.94)', borderColor: 'rgba(255,255,255,0.14)', borderWidth: 1,
           titleColor: '#F5F6F8', bodyColor: '#F5F6F8', padding: 10, titleFont: { family: 'Roboto', weight: '700' }, bodyFont: { family: 'Roboto' }
         }},
         scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9AA1AE', font: { family: 'Roboto', size: 11 } } },
+          x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#9AA1AE', font: { family: 'Roboto', size: 11 }, maxRotation: 0, autoSkip: true, autoSkipPadding: 8 } },
           y: { beginAtZero: true, ticks: { precision:0, color: '#9AA1AE', font: { family: 'Roboto', size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
           y1: { beginAtZero: true, position: 'right', ticks: { precision:0, color: '#5B8DEF', font: { family: 'Roboto', size: 11 } }, grid: { drawOnChartArea: false } }
         }
