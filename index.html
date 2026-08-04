@@ -33,7 +33,14 @@
   }
 
   *{ box-sizing: border-box; }
-  html{ scroll-behavior: smooth; background: #08090D; height: 100%; overscroll-behavior-y: none; }
+  html{
+    scroll-behavior: smooth;
+    background: #08090D;
+    height: 100%;
+    overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
 
   body{
     margin:0;
@@ -392,8 +399,8 @@
           <input type="date" id="fDate" required>
         </div>
         <div class="field">
-          <label for="fBags">Брой чували <span style="text-transform:none; opacity:.7;">(по 15 кг)</span></label>
-          <input type="number" id="fBags" min="1" step="1" placeholder="напр. 8" required>
+          <label for="fBags">Брой чували <span style="text-transform:none; opacity:.7;">(по 15 кг, 0 = само почистване)</span></label>
+          <input type="number" id="fBags" min="0" step="1" inputmode="numeric" pattern="[0-9]*" placeholder="напр. 8" required>
           <div class="bags-preview" id="bagsPreview"></div>
         </div>
         <div class="field full">
@@ -928,8 +935,9 @@
   });
 
   $('fBags').addEventListener('input', ()=>{
-    const v = parseFloat($('fBags').value);
-    $('bagsPreview').textContent = (v > 0) ? `= ${fmt(v * BAG_KG)} кг` : '';
+    const raw = $('fBags').value;
+    const v = parseFloat(raw);
+    $('bagsPreview').textContent = (raw !== '' && !isNaN(v) && v >= 0) ? `= ${fmt(v * BAG_KG)} кг` : '';
   });
 
   $('btnYes').addEventListener('click', ()=>{
@@ -944,9 +952,10 @@
   $('entryForm').addEventListener('submit', async (ev)=>{
     ev.preventDefault();
     const date = $('fDate').value;
-    const bags = parseFloat($('fBags').value);
+    const bagsRaw = $('fBags').value;
+    const bags = parseFloat(bagsRaw);
     const notes = $('fNotes').value.trim();
-    if(!date || !bags) return;
+    if(!date || bagsRaw === '' || isNaN(bags) || bags < 0) return;
 
     entries.push({ id: uid(), date, bags, cleaned: cleanedState, notes });
     activeTabKey = monthKeyOf(date);
