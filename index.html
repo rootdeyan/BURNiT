@@ -302,9 +302,9 @@
   .year-dropdown{
     position: absolute; top: 100%; left: 0; margin-top: 8px; min-width: 172px; padding: 6px;
     display: none; flex-direction: column; gap: 2px; z-index: 30;
-    background: rgba(20,22,29,0.72); border: 1px solid var(--card-border); border-radius: 14px;
+    background: rgba(16,18,24,0.97); border: 1px solid var(--card-border); border-radius: 14px;
     backdrop-filter: blur(26px) saturate(170%); -webkit-backdrop-filter: blur(26px) saturate(170%);
-    box-shadow: 0 20px 46px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+    box-shadow: 0 20px 46px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .tab-year-wrap.open .year-dropdown, .tab-year-wrap:hover .year-dropdown{ display: flex; }
   .dd-month{
@@ -566,6 +566,23 @@
 
   function fmt(n){ return new Intl.NumberFormat('bg-BG').format(n); }
   function uid(){ return 'e_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function dedupeKey(e){
+    const c = e.cleaned === true ? '1' : (e.cleaned === false ? '0' : '-');
+    return `${e.date}|${Number(e.bags)}|${c}`;
+  }
+  function dedupeExistingEntries(){
+    const seen = new Set();
+    const kept = [];
+    let removed = 0;
+    for(const e of entries){
+      const key = dedupeKey(e);
+      if(seen.has(key)){ removed++; continue; }
+      seen.add(key);
+      kept.push(e);
+    }
+    entries = kept;
+    return removed;
+  }
   function pad(n){ return String(n).padStart(2,'0'); }
   function monthKeyOf(dateIso){ return dateIso.slice(0,7); }
   function currentMonthKey(){ const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1); }
@@ -596,6 +613,7 @@
       showMsg('Браузърът блокира локалното съхранение (напр. частен/incognito режим) — записите няма да се запазят между презарежданията.', true);
       return;
     }
+    let corrupted = false;
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
@@ -603,10 +621,20 @@
     }catch(e){
       console.error('BurnIT: повредени данни в localStorage', e);
       entries = [];
-      showMsg('Съхранените данни не можаха да се прочетат правилно. Провери за резервно копие.', true);
+      corrupted = true;
     }
     activeTabKey = currentMonthKey();
+
+    const removedDup = dedupeExistingEntries();
+    if(removedDup > 0) saveEntries();
+
     renderAll();
+
+    if(corrupted){
+      showMsg('Съхранените данни не можаха да се прочетат правилно. Провери за резервно копие.', true);
+    } else if(removedDup > 0){
+      showMsg(`Премахнати ${removedDup} дублиращи се ${removedDup === 1 ? 'запис, който вече беше' : 'записа, които вече бяха'} във файла.`);
+    }
   }
 
   function saveEntries(){
@@ -1232,8 +1260,9 @@
     const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
     if(lines.length === 0){ showMsg('Няма въведени редове.', true); return; }
 
-    let added = 0, failed = 0;
+    let added = 0, failed = 0, duplicates = 0;
     let lastAddedMonthKey = null;
+    const knownKeys = new Set(entries.map(dedupeKey));
 
     for(const line of lines){
       const parts = line.split(',').map(p => p.trim());
@@ -1243,6 +1272,10 @@
       if(!date || isNaN(bags) || bags < 0){ failed++; continue; }
       const cleaned = parts.length >= 3 ? parseCleanedWord(parts[2]) : null;
       const notes = parts.length >= 4 ? parts.slice(3).join(', ') : '';
+
+      const key = dedupeKey({ date, bags, cleaned });
+      if(knownKeys.has(key)){ duplicates++; continue; }
+      knownKeys.add(key);
 
       entries.push({ id: uid(), date, bags, cleaned, notes });
       lastAddedMonthKey = monthKeyOf(date);
@@ -1256,12 +1289,21 @@
       $('bulkText').value = '';
     }
 
-    showMsg(
-      added > 0
-        ? `Добавени ${added} стари записа${failed ? ` (пропуснати ${failed} реда с грешен формат)` : ''}.`
-        : `Нищо не бе добавено — провери формата на редовете.`,
-      added === 0
-    );
+    let msg, isErr = false;
+    if(added > 0){
+      msg = `Добавени ${added} нови ${added === 1 ? 'запис' : 'записа'}`;
+      const extras = [];
+      if(duplicates) extras.push(`пропуснати ${duplicates} вече въведени`);
+      if(failed) extras.push(`${failed} с грешен формат`);
+      if(extras.length) msg += ` (${extras.join(', ')})`;
+      msg += '.';
+    } else if(duplicates > 0 && failed === 0){
+      msg = `Всички ${duplicates} реда вече са въведени — нищо ново не бе добавено.`;
+    } else {
+      msg = 'Нищо не бе добавено — провери формата на редовете.';
+      isErr = true;
+    }
+    showMsg(msg, isErr);
   });
 
   window.addEventListener('resize', moveIndicator);
