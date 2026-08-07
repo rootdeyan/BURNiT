@@ -704,7 +704,7 @@
       for(let d=1; d<=dCount; d++) days.push(y + '-' + pad(m) + '-' + pad(d));
 
       labels = days.map(iso => String(Number(iso.slice(8,10))));
-      loadData = days.map(iso => entries.filter(e => e.date === iso).length);
+      loadData = days.map(iso => entries.filter(e => e.date === iso && (Number(e.bags)||0) > 0).length);
       cleanData = days.map(iso => entries.filter(e => e.date === iso && e.cleaned === true).length);
       bagsData = days.map(iso => entries.filter(e => e.date === iso).reduce((s,e)=> s + (e.bags||0), 0));
       hintText = 'зареждания и почиствания по ден · ' + monthLabel(statsFilterValue);
@@ -734,7 +734,7 @@
       const scopedEntries = statsFilterValue.length === 4 ? entries.filter(e => e.date.slice(0,4) === statsFilterValue) : entries;
 
       labels = months.map(k => { const [yy,mm] = k.split('-'); return monthShort[Number(mm)-1] + " '" + yy.slice(2); });
-      loadData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k).length);
+      loadData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k && (Number(e.bags)||0) > 0).length);
       cleanData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k && e.cleaned === true).length);
       bagsData = months.map(k => scopedEntries.filter(e => monthKeyOf(e.date) === k).reduce((sum,e)=> sum + (e.bags||0), 0));
       hintText = statsFilterValue.length === 4
